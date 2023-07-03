@@ -15,7 +15,7 @@ export class VenomInstance {
     venom
       .create({
         headless: false,
-        session: 'test', //name of session
+        session: 'OpenAI Bot', //name of session
       })
       .then((client) => this.start(client))
       .catch((erro) => {
@@ -26,6 +26,8 @@ export class VenomInstance {
     const configuration = new Configuration({
       apiKey: process.env.OPENAI_API_KEY,
     });
+
+    
     
     const openai =  new OpenAIApi(configuration);
     
