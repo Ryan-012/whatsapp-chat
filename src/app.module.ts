@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
-import { VenomInstance } from './venom/venom.instance';
+import { VenomService } from './venom/venom.service';
 import {ConfigModule} from '@nestjs/config'
 import { PrismaService } from './prisma/prisma.service';
+import { OpenAIService } from './openai/openai.service';
+
 
 
 @Module({
   imports: [ConfigModule.forRoot()],
   controllers: [],
-  providers: [ VenomInstance, PrismaService],
+  providers: [ VenomService, PrismaService, OpenAIService],
 })
 export class AppModule {}
