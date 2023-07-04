@@ -1,4 +1,6 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
+import { start } from "repl";
+import { async } from "rxjs";
 import { OpenAIService } from "src/openai/openai.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as Venom from 'venom-bot'
@@ -8,32 +10,38 @@ import * as Venom from 'venom-bot'
 
 @Injectable()
 export class VenomService implements OnModuleInit {
-private userName: string | null = null
+  private client: Venom.Whatsapp
+
 
 constructor(private readonly prisma: PrismaService, private readonly openai: OpenAIService){}
 async onModuleInit() {
-  await Venom.create({headless: false, session: 'OpenAI Bot'}).then(client=>{
-       this.start(client)
-     }).catch(err=> console.log(err))
+   await Venom.create({ session: 'OpenAI_Bot' }).then(client=>{
+    this.client = client
+    this.start()
+  }).catch(err=>{
+    console.log(err)
+  })
  }
 
 
 
- private start(client: Venom.Whatsapp){
-  client.onAnyMessage( (message)=>{
-     this.venomBot(client, message)
+ private async start(){
+ this.client.onAnyMessage( (message)=>{
+    
+    this.venomBot(this.client, message)
   })
  }
 
  private async venomBot(client: Venom.Whatsapp, message: Venom.Message){
 const user = await this.prisma.user.findFirst({
   where:{
-    number: message.author 
+    number: message.from 
   }
 })
 
 
 if(message.body.startsWith('/bot')){
+
   const messageText = message.body.substring('/bot'.length).trim(); 
 
 if(!user){
@@ -51,8 +59,8 @@ return await this.prisma.user.create({
 
 if(user.step === 2 ){
  this.sendText(client, `Is your name ${messageText}? Reply with 'Yes' or 'No'.`, message.from)
- this.updateStepUser(user.id, {step:3})
- this.userName = messageText
+ this.updateStepUser(user.id, {step:3, name: messageText})
+ 
  }
 
  if(user.step === 3 ){
@@ -63,7 +71,6 @@ if(user.step === 2 ){
 
   }
  else if(messageText.toLowerCase() === 'no'){
-    this.userName = null
     this.updateStepUser(user.id, {step:2})
     this.sendText(client, '🤔 Alright, could you please provide me with your name again?', message.from)
  
@@ -73,7 +80,7 @@ if(user.step === 2 ){
 
  if(user.step === 4){
   const openAIResponse = await this.openai.getOpenAIResponse(messageText) 
-  this.sendText(client, openAIResponse, message.from)
+ await this.sendText(client, openAIResponse, message.from)
   this.sendText(client, 'Do you have another question? (Yes/No)', message.from)
   this.updateStepUser(user.id, {step: 5})
  }
@@ -89,6 +96,7 @@ if(user.step === 2 ){
       id: user.id
     }
   })
+  this.openai.cleanChatHistory()
   }
 
  }
@@ -99,8 +107,8 @@ if(user.step === 2 ){
 
  }
 
-private sendText (client:Venom.Whatsapp, body: string, to:string){
- return client.sendText(to, body).then(response=>{
+private async sendText (client:Venom.Whatsapp, body: string, to:string){
+ return await client.sendText(to, body).then(response=>{
     
     return response
   }).catch(err=>{
@@ -110,9 +118,7 @@ private sendText (client:Venom.Whatsapp, body: string, to:string){
 
 private async updateStepUser(id: string,data: {step: number, name?: string}){
   
-  if(this.userName){
-data.name = this.userName
-  }
+ 
  return await this.prisma.user.update({
     where:{
       id

@@ -32,4 +32,9 @@ export class OpenAIService {
 
   }
 
+  cleanChatHistory(){
+  return this.chatHistory = []
+  }
+
+
  }
