@@ -1,6 +1,4 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { start } from "repl";
-import { async } from "rxjs";
 import { OpenAIService } from "src/openai/openai.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as Venom from 'venom-bot'
@@ -15,11 +13,11 @@ export class VenomService implements OnModuleInit {
 
 constructor(private readonly prisma: PrismaService, private readonly openai: OpenAIService){}
 async onModuleInit() {
-   await Venom.create({ session: 'OpenAI_Bot' }).then(client=>{
+   await Venom.create({ session: 'OpenAI_Bot'}).then(client=>{
     this.client = client
     this.start()
   }).catch(err=>{
-    console.log(err)
+    console.log(err) 
   })
  }
 
@@ -28,7 +26,7 @@ async onModuleInit() {
  private async start(){
  this.client.onAnyMessage( (message)=>{
     
-    this.venomBot(this.client, message)
+    this.venomBot(this.client, message) 
   })
  }
 
@@ -45,7 +43,7 @@ if(message.body.startsWith('/bot')){
   const messageText = message.body.substring('/bot'.length).trim(); 
 
 if(!user){
-this.sendText(client, 'Hello! I am a virtual assistant ready to answer your questions. How can I assist you? Before we proceed, could you please provide me with your name?',message.from)
+this.sendText(client, '👋 Hello! I am an AI-powered virtual assistant here to help you with your queries. How may I assist you today? Before we proceed, may I kindly ask for your name?',message.from)
 return await this.prisma.user.create({
   data:{
    number: message.from,
@@ -58,7 +56,7 @@ return await this.prisma.user.create({
 }
 
 if(user.step === 2 ){
- this.sendText(client, `Is your name ${messageText}? Reply with 'Yes' or 'No'.`, message.from)
+ this.sendText(client, `Is your name ${messageText}? Reply with 'Yes' or 'No'. ✍️`, message.from)
  this.updateStepUser(user.id, {step:3, name: messageText})
  
  }
@@ -80,8 +78,8 @@ if(user.step === 2 ){
 
  if(user.step === 4){
   const openAIResponse = await this.openai.getOpenAIResponse(messageText) 
- await this.sendText(client, openAIResponse, message.from)
-  this.sendText(client, 'Do you have another question? (Yes/No)', message.from)
+ await this.sendText(client, `Here's the answer to your question: ${openAIResponse} 🤖`, message.from)
+  this.sendText(client, 'Do you have another question? (Yes/No) ❓', message.from)
   this.updateStepUser(user.id, {step: 5})
  }
 
@@ -90,7 +88,7 @@ if(user.step === 2 ){
     this.sendText(client, '📝 Please enter your question:', message.from)
     this.updateStepUser(user.id, {step:4})
   }else if(messageText.toLowerCase() === 'no'){
-    this.sendText(client, `Thank you, ${user.name}, for using our virtual assistant! If you have any more questions in the future, feel free to ask. Have a great day!`, message.from)
+    this.sendText(client, `Thank you, ${user.name}, for using our virtual assistant! If you have any more questions in the future, feel free to ask. Have a great day! 🌟`, message.from)
  await this.prisma.user.delete({
     where:{
       id: user.id
@@ -108,6 +106,7 @@ if(user.step === 2 ){
  }
 
 private async sendText (client:Venom.Whatsapp, body: string, to:string){
+ 
  return await client.sendText(to, body).then(response=>{
     
     return response
