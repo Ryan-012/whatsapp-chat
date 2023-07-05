@@ -38,7 +38,7 @@ const user = await this.prisma.user.findFirst({
 })
 
 
-if(message.body.startsWith('/bot')){
+if(message.body && message.body.startsWith('/bot')){
 
   const messageText = message.body.substring('/bot'.length).trim(); 
 
@@ -106,7 +106,7 @@ if(user.step === 2 ){
  }
 
 private async sendText (client:Venom.Whatsapp, body: string, to:string){
- 
+ await client.startTyping(to, true)
  return await client.sendText(to, body).then(response=>{
     
     return response
