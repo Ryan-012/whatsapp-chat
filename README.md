@@ -1,5 +1,5 @@
 
-# ⚡ Venom Bot
+# 🤖 Venom Bot
 
 Venom Bot is a chatbot application powered by OpenAI that allows you to ask questions and receive responses using state-of-the-art natural language processing.
 
